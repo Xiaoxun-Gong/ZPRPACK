@@ -1,7 +1,7 @@
 import numpy as np
 import netCDF4 as nc
 
-from .utils import make_kkmap, is_master, QgridFile, same_kpt, make_kkmap
+from .utils import make_kkmap, is_master, QgridFile
 from .constants import hartree2ev
 
 class EnkData:
@@ -48,6 +48,10 @@ class EnkData:
 
         if eqp_option is not None:
             kpt_sigma, eqprange, eqp = read_sigmahp(f'{path_root}/sigma_hp.log', band_option=eqp_option)
+            # !!!
+            # kpt_sigma = np.concatenate((kpt_sigma, -kpt_sigma), axis=0)
+            # eqp = np.concatenate((eqp, eqp), axis=0)
+            # !!!
             assert len(kpt_sigma) == len(self.kpt), 'K grid mismatch between DFT and GW'
             kkmap = make_kkmap(kpt_sigma, self.kpt, symopt=0) # make kkmap w/o TR symmetry
             self.eqp = eqp[None, kkmap, :] / hartree2ev

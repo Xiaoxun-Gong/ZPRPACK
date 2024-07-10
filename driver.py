@@ -18,7 +18,6 @@ class ZPRDriver(QgridFile):
             print('==============================================================================')
             print('Program ZPRPACK')
             print('Author: Xiaoxun Gong (xiaoxun.gong@berkeley.edu)')
-            print('Under development, last modified: 05/16/2024')
             print('==============================================================================')
             print()
         
@@ -32,9 +31,9 @@ class ZPRDriver(QgridFile):
 
         super(ZPRDriver, self).__init__(path_root, *args, **kwargs)
 
-        self.gkkdata = GKKData(path_root, *args, use_gwpt=use_gwpt, nbandkq=nbandkq, nbandk=nbandk, **kwargs)
         self.ddbdata = DDBData(path_root, *args, **kwargs)
         self.enkdata = EnkData(path_root, nband=nbandkq, eqp_option=eqp_option, readwfq=readwfq, prefix=kwargs.get('prefix', 'phonon-q'))
+        self.gkkdata = GKKData(path_root, *args, use_gwpt=use_gwpt, nbandkq=nbandkq, nbandk=nbandk, **kwargs)
 
         gkkmat = self.gkkdata.gkk_matrix
         self.kqmap = make_kkmap(self.enkdata.kpt, self.gkkdata.kpt + self.qpt_loc) # gkkdata.kpt is the single k point
@@ -154,6 +153,8 @@ class ZPRDriver(QgridFile):
         #     epceout.write('--------------------\n')
         # epceout.close()
     
+    @mpi_watch
+    @simple_timer('Spectral analysis done, total wall time = {t}')
     def zpr_spectral_analysis(self, savefname, ws_spectral, s_spectral, ibnd, eta=0.01):
         ws_spectral = np.array(ws_spectral) / hartree2ev / 1000 # mev -> hartree
         s_spectral /= 1000 * hartree2ev # mev -> hartree
@@ -170,11 +171,13 @@ class ZPRDriver(QgridFile):
             dEDW_wn[iw, :] = self.dEDW[:, 0]
         sys.stdout.close()
         sys.stdout = sys.__stdout__
+
+        if not is_master(): return
         
         fout = open(savefname, 'w')
         fout.write('Zero point renormalization spectral analysis\n')
         fout.write(f'Band index = {ibnd}\n')
-        fout.write(f'Energy unit: meV/meV\n\n')
+        fout.write(f'Unit of dEnk(f): 1 (no unit)\n\n')
         fout.write(' ifreq      freq(meV)             dEnk(f)             dEFM(f)             dEDW(f)\n')
         
         ws_spectral *= 1000 * hartree2ev

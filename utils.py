@@ -168,6 +168,12 @@ def make_kkmap(kpt1, kpt2, symopt=0):
     Returns:
     ---------
     kkmap[nk2]: kkmap[i] is the index of the k-point in kpt1 corresponding to the ith k-point in kpt2
+
+    Example: 
+    ---------
+    ek1, ek2 are two energy arrays on two k grids kpt1 and kpt2, but the sequence of k-points is different.
+    Use kkmap = make_kkmap(kpt1, kpt2)
+    Then ek1[kkmap] == ek2
     '''
     # nk = kpt1.shape[0]
     # assert kpt2.shape[0] == nk
